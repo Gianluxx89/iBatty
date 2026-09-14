@@ -1,4 +1,4 @@
-const CACHE_NAME = 'turni-k5-v3';
+const CACHE_NAME = 'iBatty';
 const ASSETS = [
   '/iBatty/index.html',
   '/iBatty/manifest.json',
