@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Turni K5">
-<link rel="apple-touch-icon" href="/iBatty/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/iBatty/icon-192.png">
 <title>Turni K5</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -317,6 +317,6 @@ const dow=(t.getDay()+6)%7;
 curWeekStart=new Date(t.getFullYear(),t.getMonth(),t.getDate()-dow);
 render();
 </script>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/iBatty/service-worker.js").catch(function(){});});}</script>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/iBatty/service-worker.js").catch(function(){});});}</script>
 </body>
 </html>
