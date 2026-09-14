@@ -1,6 +1,6 @@
 {
-  "name": "Turni K5",
-  "short_name": "Turni K5",
+  "name": "iBatty",
+  "short_name": "iBatty",
   "description": "Calcolatore turni a ciclo continuo K5",
   "start_url": "/iBatty/index.html",
   "scope": "/iBatty/",
