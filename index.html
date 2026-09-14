@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turni K5</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Turni K5">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f5;padding:1rem}
+.app{max-width:520px;margin:0 auto}
+.tabs{display:flex;gap:4px;margin-bottom:1rem;border-bottom:1px solid #ddd;padding-bottom:0}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;background:none;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#1a1a1a;border-bottom:2px solid #1a1a1a;font-weight:500}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem}
+.nav-title{font-size:15px;font-weight:500}
+.nav-btns{display:flex;gap:4px}
+.nav-btn{background:#fff;border:1px solid #ddd;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:14px;color:#1a1a1a}
+.nav-btn:hover{background:#f0f0f0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dow{text-align:center;font-size:11px;color:#888;padding:4px 0;font-weight:500}
+.day-cell{border-radius:8px;padding:4px 3px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.day-cell.empty{background:none}
+.day-cell .dn{font-size:11px;font-weight:400}
+.day-cell .tt{font-size:13px;font-weight:500}
+.day-cell.today-cell{outline:2px solid #1a1a1a;outline-offset:-2px}
+.day-cell.holiday{position:relative}
+.day-cell.holiday::after{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.6}
+.cM{background:#B5D4F4;color:#0C447C}
+.cN{background:#CECBF6;color:#3C3489}
+.cP{background:#C0DD97;color:#27500A}
+.cR{background:#D3D1C7;color:#444441}
+.week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:0.5rem}
+.week-cell{border-radius:8px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.week-cell .wd{font-size:10px;opacity:0.7}
+.week-cell .wdate{font-size:11px}
+.week-cell .wt{font-size:14px;font-weight:500}
+.today-btn{font-size:12px;color:#888;background:#fff;border:1px solid #ddd;border-radius:8px;padding:3px 8px;cursor:pointer;margin-left:6px}
+.today-btn:hover{background:#f0f0f0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.stat-card{background:#fff;border-radius:10px;padding:0.75rem 1rem;border:1px solid #eee}
+.stat-label{font-size:12px;color:#888;margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:500}
+.stat-sub{font-size:11px;color:#888;margin-top:2px}
+.section-title{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;margin-top:1rem}
+.feast-list{display:flex;flex-direction:column;gap:4px}
+.feast-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;font-size:13px;border:1px solid #eee;background:#fff}
+.feast-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.bM{background:#B5D4F4;color:#0C447C}
+.bN{background:#CECBF6;color:#3C3489}
+.bP{background:#C0DD97;color:#27500A}
+.bR{background:#D3D1C7;color:#444441}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0.75rem}
+.leg{display:flex;align-items:center;gap:5px;font-size:12px;color:#888}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.view-toggle{display:flex;gap:4px;margin-bottom:0.75rem}
+.vbtn{background:#fff;border:1px solid #ddd;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:12px;color:#888}
+.vbtn.active{background:#f0f0f0;color:#1a1a1a;font-weight:500}
+.pct-bar-bg{background:#ddd;border-radius:4px;height:6px;margin-top:6px;overflow:hidden}
+.pct-bar-fill{height:6px;border-radius:4px;background:#E24B4A}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('cal')">Calendario</button>
+  <button class="tab" onclick="showTab('stats')">Statistiche</button>
+</div>
+
+<div id="tab-cal">
+  <div class="nav">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="nav-title" id="calTitle"></span>
+      <button class="today-btn" onclick="goToday()">oggi</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="nav-btns">
+        <button class="nav-btn" onclick="navigate(-1)">&#8249;</button>
+        <button class="nav-btn" onclick="navigate(1)">&#8250;</button>
+      </div>
+      <div class="nav-btns">
+        <button class="nav-btn" onclick="navigateYear(-1)">&#171;</button>
+        <button class="nav-btn" onclick="navigateYear(1)">&#187;</button>
+      </div>
+    </div>
+  </div>
+  <div class="view-toggle">
+    <button class="vbtn active" id="vbtn-month" onclick="setView('month')">Mese</button>
+    <button class="vbtn" id="vbtn-week" onclick="setView('week')">Settimana</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#B5D4F4"></div>Mattino</div>
+    <div class="leg"><div class="leg-dot" style="background:#CECBF6"></div>Notte</div>
+    <div class="leg"><div class="leg-dot" style="background:#C0DD97"></div>Pomeriggio</div>
+    <div class="leg"><div class="leg-dot" style="background:#D3D1C7"></div>Riposo</div>
+    <div class="leg"><div class="leg-dot" style="background:#D3D1C7;border-radius:50%"></div>Festività</div>
+  </div>
+  <div id="calBody"></div>
+</div>
+
+<div id="tab-stats" style="display:none">
+  <div id="statsBody"></div>
+</div>
+</div>
+
+<script>
+const CYCLE=[];
+const BLOCKS=[{t:'M',n:4},{t:'R',n:2},{t:'N',n:4},{t:'R',n:2},{t:'P',n:4},{t:'R',n:2},{t:'M',n:3},{t:'R',n:3},{t:'N',n:3},{t:'R',n:3},{t:'P',n:3},{t:'R',n:2}];
+BLOCKS.forEach(b=>{for(let i=0;i<b.n;i++) CYCLE.push(b.t);});
+const REF=new Date(2026,3,9);
+const REF_IDX=30;
+const LABELS={M:'Mattino',N:'Notte',P:'Pomeriggio',R:'Riposo'};
+const SHORT={M:'Mat',N:'Not',P:'Pom',R:'Rip'};
+const DOWS=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+const MESI_L=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const MESI_S=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+
+function getTurno(date){
+  const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  const diff=Math.round((d-new Date(REF.getFullYear(),REF.getMonth(),REF.getDate()))/86400000);
+  const idx=((REF_IDX+diff)%35+35)%35;
+  return{turno:CYCLE[idx],idx};
+}
+
+function isToday(d){
+  const t=new Date();
+  return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate();
+}
+
+function computeEaster(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+    f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+    i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,
+    m=Math.floor((a+11*h+22*l)/451),
+    month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1;
+  return new Date(y,month-1,day);
+}
+
+function getHolidays(year){
+  const easter=computeEaster(year);
+  const easterMon=new Date(easter);easterMon.setDate(easterMon.getDate()+1);
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const map={};
+  [[1,1,'Capodanno'],[1,6,'Epifania'],[4,25,'Liberazione'],[5,1,'Lavoro'],
+   [6,2,'Repubblica'],[8,15,'Ferragosto'],[11,1,'Ognissanti'],[12,8,'Immacolata'],
+   [12,25,'Natale'],[12,26,'S. Stefano']].forEach(([m,g,n])=>
+    map[`${year}-${String(m).padStart(2,'0')}-${String(g).padStart(2,'0')}`]=n);
+  map[fmt(easter)]='Pasqua';
+  map[fmt(easterMon)]='Pasquetta';
+  return map;
+}
+
+let curYear=new Date().getFullYear();
+let curMonth=new Date().getMonth();
+let curView='month';
+let curWeekStart=null;
+let statsYear=new Date().getFullYear();
+
+function setView(v){
+  curView=v;
+  document.getElementById('vbtn-month').className='vbtn'+(v==='month'?' active':'');
+  document.getElementById('vbtn-week').className='vbtn'+(v==='week'?' active':'');
+  if(v==='week'&&!curWeekStart){
+    const t=new Date();const dow=(t.getDay()+6)%7;
+    curWeekStart=new Date(t.getFullYear(),t.getMonth(),t.getDate()-dow);
+  }
+  render();
+}
+
+function navigate(dir){
+  if(curView==='month'){
+    curMonth+=dir;
+    if(curMonth>11){curMonth=0;curYear++;}
+    if(curMonth<0){curMonth=11;curYear--;}
+  } else {
+    curWeekStart=new Date(curWeekStart.getFullYear(),curWeekStart.getMonth(),curWeekStart.getDate()+dir*7);
+  }
+  render();syncStatsYear();
+}
+
+function navigateYear(dir){
+  if(curView==='month') curYear+=dir;
+  else curWeekStart=new Date(curWeekStart.getFullYear()+dir,curWeekStart.getMonth(),curWeekStart.getDate());
+  render();syncStatsYear();
+}
+
+function goToday(){
+  const t=new Date();curYear=t.getFullYear();curMonth=t.getMonth();
+  if(curView==='week'){const dow=(t.getDay()+6)%7;curWeekStart=new Date(t.getFullYear(),t.getMonth(),t.getDate()-dow);}
+  render();syncStatsYear();
+}
+
+function syncStatsYear(){
+  const y=curView==='month'?curYear:curWeekStart.getFullYear();
+  if(y!==statsYear){statsYear=y;if(document.getElementById('tab-stats').style.display!=='none') renderStats();}
+}
+
+function render(){if(curView==='month') renderMonth();else renderWeek();}
+
+function renderMonth(){
+  const holidays=getHolidays(curYear);
+  document.getElementById('calTitle').textContent=`${MESI_L[curMonth]} ${curYear}`;
+  const last=new Date(curYear,curMonth+1,0);
+  let startDow=(new Date(curYear,curMonth,1).getDay()+6)%7;
+  let html='<div class="cal-grid">';
+  DOWS.forEach(d=>html+=`<div class="dow">${d}</div>`);
+  for(let i=0;i<startDow;i++) html+='<div class="day-cell empty"></div>';
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(curYear,curMonth,d);
+    const {turno}=getTurno(date);
+    const key=`${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isH=key in holidays;
+    html+=`<div class="day-cell c${turno}${isToday(date)?' today-cell':''}${isH?' holiday':''}" title="${isH?holidays[key]:''}">
+      <span class="dn">${d}</span><span class="tt">${SHORT[turno]}</span>
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('calBody').innerHTML=html;
+}
+
+function renderWeek(){
+  const t=curWeekStart;
+  const endDate=new Date(t.getFullYear(),t.getMonth(),t.getDate()+6);
+  const y1=t.getFullYear(),y2=endDate.getFullYear();
+  document.getElementById('calTitle').textContent=y1===y2
+    ?`${t.getDate()} ${MESI_S[t.getMonth()]} – ${endDate.getDate()} ${MESI_S[endDate.getMonth()]} ${y1}`
+    :`${t.getDate()} ${MESI_S[t.getMonth()]} ${y1} – ${endDate.getDate()} ${MESI_S[endDate.getMonth()]} ${y2}`;
+  const holidays=getHolidays(t.getFullYear());
+  let html='<div class="week-strip">';
+  for(let i=0;i<7;i++){
+    const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()+i);
+    const {turno}=getTurno(d);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const isH=key in holidays;
+    html+=`<div class="week-cell c${turno}${isToday(d)?' today-cell':''}">
+      <span class="wd">${DOWS[i]}</span>
+      <span class="wdate">${d.getDate()}/${d.getMonth()+1}</span>
+      <span class="wt">${SHORT[turno]}</span>
+      ${isH?`<span style="font-size:9px;opacity:0.7">${holidays[key].substring(0,6)}</span>`:''}
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('calBody').innerHTML=html;
+}
+
+function renderStats(){
+  const year=statsYear;
+  const holidays=getHolidays(year);
+  const totalFeast=Object.keys(holidays).length;
+  const feastRows=[];
+  let workedFeast=0;
+  for(const key in holidays){
+    const parts=key.split('-');
+    const date=new Date(+parts[0],+parts[1]-1,+parts[2]);
+    const {turno}=getTurno(date);
+    if(turno!=='R') workedFeast++;
+    feastRows.push({date,label:`${date.getDate()} ${MESI_S[date.getMonth()]}`,name:holidays[key],turno});
+  }
+  feastRows.sort((a,b)=>a.date-b.date);
+  const pct=Math.round(workedFeast/totalFeast*100);
+  let html=`<div class="nav" style="margin-bottom:0.5rem">
+    <span class="nav-title">Anno ${year}</span>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="changeStatsYear(-1)">&#8249;</button>
+      <button class="nav-btn" onclick="changeStatsYear(1)">&#8250;</button>
+    </div>
+  </div>`;
+  html+=`<div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Festività lavorate</div>
+      <div class="stat-value">${workedFeast} <span style="font-size:14px;font-weight:400">su ${totalFeast}</span></div>
+      <div class="stat-sub">giorni festivi nazionali</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">% festività lavorate</div>
+      <div class="stat-value">${pct}%</div>
+      <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cicli K5 completati</div>
+      <div class="stat-value">${Math.floor(365/35)}</div>
+      <div class="stat-sub">+${365%35} giorni residui</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Riposi dell'anno</div>
+      <div class="stat-value">${Math.round(365/35*12)}</div>
+      <div class="stat-sub">giorni stimati</div>
+    </div>
+  </div>`;
+  html+=`<div class="section-title">Dettaglio festività ${year}</div><div class="feast-list">`;
+  feastRows.forEach(({label,name,turno})=>{
+    html+=`<div class="feast-row"><span>${label} — ${name}</span><span class="feast-badge b${turno}">${LABELS[turno]}</span></div>`;
+  });
+  html+='</div>';
+  document.getElementById('statsBody').innerHTML=html;
+}
+
+function changeStatsYear(dir){
+  statsYear+=dir;curYear=statsYear;curMonth=0;renderStats();
+}
+
+function showTab(t){
+  document.getElementById('tab-cal').style.display=t==='cal'?'':'none';
+  document.getElementById('tab-stats').style.display=t==='stats'?'':'none';
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(t==='cal'&&i===0)||(t==='stats'&&i===1)));
+  if(t==='stats'){statsYear=curView==='month'?curYear:curWeekStart.getFullYear();renderStats();}
+}
+
+const t=new Date();
+const dow=(t.getDay()+6)%7;
+curWeekStart=new Date(t.getFullYear(),t.getMonth(),t.getDate()-dow);
+render();if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
